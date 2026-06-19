@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Empresa {
+  id              Int      @id @default(1)
+  nombre          String
+  nit             String
+  correo          String
+  telefono        String
+  direccion       String
+  ciudad          String
+  pais            String
+  condicionesPago String?
+  footerTexto     String?
+  logo            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Cliente {
+  id                 String    @id @default(uuid())
+  tipoIdentificacion String
+  documento          String    @unique
+  nombre             String
+  correo             String
+  telefono           String
+  direccion          String
+  ciudad             String
+  pais               String
+  observaciones      String?
+  estado             String    @default("activo")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  facturas           Factura[]
+}
+
+model Producto {
+  id             String           @id @default(uuid())
+  codigo         String           @unique
+  nombre         String
+  descripcion    String?
+  precioUnitario Float
+  impuesto       Float?
+  categoria      String
+  estado         String           @default("activo")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  detalles       DetalleFactura[]
+}
+
+model Factura {
+  id              String           @id @default(uuid())
+  numero          String           @unique
+  clienteId       String
+  cliente         Cliente          @relation(fields: [clienteId], references: [id])
+  fechaEmision    DateTime
+  fechaVencimiento DateTime
+  subtotal        Float
+  impuestos       Float
+  descuento       Float            @default(0)
+  descuentoValor  Float            @default(0)
+  total           Float
+  notas           String?
+  condicionesPago String?
+  estado          String           @default("emitida")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  detalles        DetalleFactura[]
+}
+
+model DetalleFactura {
+  id             String    @id @default(uuid())
+  facturaId      String
+  factura        Factura   @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  productoId     String?
+  producto       Producto? @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  codigo         String
+  nombre         String
+  cantidad       Int
+  precioUnitario Float
+  impuesto       Float?
+  subtotal       Float
+  total          Float
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
