@@ -2,29 +2,54 @@
 
 import { db } from "./db";
 import { revalidatePath } from "next/cache";
-import { hashPassword, verifyPassword, encrypt, deleteSession, getSession } from "./auth";
+import {
+  hashPassword,
+  verifyPassword,
+  encrypt,
+  deleteSession,
+  getSession,
+} from "./auth";
 import { cookies } from "next/headers";
 
 export async function getEmpresa() {
-  let empresa = await db.empresa.findFirst();
-  if (!empresa) {
-    empresa = await db.empresa.create({
-      data: {
-        id: 1,
-        nombre: "Mi Empresa S.A.S.",
-        nit: "900.123.456-7",
-        correo: "contacto@miempresa.com",
-        telefono: "+57 (601) 555-0199",
-        direccion: "Calle 100 # 15-22",
-        ciudad: "Bogotá",
-        pais: "Colombia",
-        condicionesPago: "Pago a 30 días a partir de la fecha de facturación.",
-        footerTexto: "Gracias por su compra. Esta factura fue generada electrónicamente.",
-        logo: null
-      }
-    });
+  try {
+    let empresa = await db.empresa.findFirst();
+    if (!empresa) {
+      empresa = await db.empresa.create({
+        data: {
+          id: 1,
+          nombre: "Mi Empresa S.A.S.",
+          nit: "900.123.456-7",
+          correo: "contacto@miempresa.com",
+          telefono: "+57 (601) 555-0199",
+          direccion: "Calle 100 # 15-22",
+          ciudad: "Bogotá",
+          pais: "Colombia",
+          condicionesPago:
+            "Pago a 30 días a partir de la fecha de facturación.",
+          footerTexto:
+            "Gracias por su compra. Esta factura fue generada electrónicamente.",
+          logo: null,
+        },
+      });
+    }
+    return empresa;
+  } catch {
+    return {
+      id: 1,
+      nombre: "Mi Empresa S.A.S.",
+      nit: "900.123.456-7",
+      correo: "contacto@miempresa.com",
+      telefono: "+57 (601) 555-0199",
+      direccion: "Calle 100 # 15-22",
+      ciudad: "Bogotá",
+      pais: "Colombia",
+      condicionesPago: "Pago a 30 días a partir de la fecha de facturación.",
+      footerTexto:
+        "Gracias por su compra. Esta factura fue generada electrónicamente.",
+      logo: null,
+    };
   }
-  return empresa;
 }
 
 export async function updateEmpresa(data: {
@@ -42,7 +67,7 @@ export async function updateEmpresa(data: {
   const empresa = await db.empresa.upsert({
     where: { id: 1 },
     update: data,
-    create: { id: 1, ...data }
+    create: { id: 1, ...data },
   });
   revalidatePath("/configuracion");
   return empresa;
@@ -50,13 +75,13 @@ export async function updateEmpresa(data: {
 
 export async function getClientes() {
   return await db.cliente.findMany({
-    orderBy: { nombre: "asc" }
+    orderBy: { nombre: "asc" },
   });
 }
 
 export async function getClienteById(id: string) {
   return await db.cliente.findUnique({
-    where: { id }
+    where: { id },
   });
 }
 
@@ -73,13 +98,13 @@ export async function createCliente(data: {
   estado?: string;
 }) {
   const exCliente = await db.cliente.findUnique({
-    where: { documento: data.documento }
+    where: { documento: data.documento },
   });
   if (exCliente) {
     throw new Error("El documento ya se encuentra registrado.");
   }
   const cliente = await db.cliente.create({
-    data
+    data,
   });
   revalidatePath("/clientes");
   return cliente;
@@ -98,17 +123,19 @@ export async function updateCliente(
     pais: string;
     observaciones?: string;
     estado?: string;
-  }
+  },
 ) {
   const exCliente = await db.cliente.findFirst({
-    where: { documento: data.documento, NOT: { id } }
+    where: { documento: data.documento, NOT: { id } },
   });
   if (exCliente) {
-    throw new Error("El documento ya se encuentra registrado por otro cliente.");
+    throw new Error(
+      "El documento ya se encuentra registrado por otro cliente.",
+    );
   }
   const cliente = await db.cliente.update({
     where: { id },
-    data
+    data,
   });
   revalidatePath("/clientes");
   return cliente;
@@ -116,13 +143,15 @@ export async function updateCliente(
 
 export async function deleteCliente(id: string) {
   const facturasCount = await db.factura.count({
-    where: { clienteId: id }
+    where: { clienteId: id },
   });
   if (facturasCount > 0) {
-    throw new Error("No se puede eliminar el cliente porque tiene facturas asociadas.");
+    throw new Error(
+      "No se puede eliminar el cliente porque tiene facturas asociadas.",
+    );
   }
   await db.cliente.delete({
-    where: { id }
+    where: { id },
   });
   revalidatePath("/clientes");
   return true;
@@ -130,13 +159,13 @@ export async function deleteCliente(id: string) {
 
 export async function getProductos() {
   return await db.producto.findMany({
-    orderBy: { nombre: "asc" }
+    orderBy: { nombre: "asc" },
   });
 }
 
 export async function getProductoById(id: string) {
   return await db.producto.findUnique({
-    where: { id }
+    where: { id },
   });
 }
 
@@ -150,13 +179,13 @@ export async function createProducto(data: {
   estado?: string;
 }) {
   const exProducto = await db.producto.findUnique({
-    where: { codigo: data.codigo }
+    where: { codigo: data.codigo },
   });
   if (exProducto) {
     throw new Error("La referencia o código ya está en uso.");
   }
   const producto = await db.producto.create({
-    data
+    data,
   });
   revalidatePath("/productos");
   return producto;
@@ -172,17 +201,17 @@ export async function updateProducto(
     impuesto?: number;
     categoria: string;
     estado?: string;
-  }
+  },
 ) {
   const exProducto = await db.producto.findFirst({
-    where: { codigo: data.codigo, NOT: { id } }
+    where: { codigo: data.codigo, NOT: { id } },
   });
   if (exProducto) {
     throw new Error("La referencia o código ya está en uso por otro producto.");
   }
   const producto = await db.producto.update({
     where: { id },
-    data
+    data,
   });
   revalidatePath("/productos");
   return producto;
@@ -190,13 +219,15 @@ export async function updateProducto(
 
 export async function deleteProducto(id: string) {
   const detallesCount = await db.detalleFactura.count({
-    where: { productoId: id }
+    where: { productoId: id },
   });
   if (detallesCount > 0) {
-    throw new Error("No se puede eliminar el producto porque está incluido en facturas.");
+    throw new Error(
+      "No se puede eliminar el producto porque está incluido en facturas.",
+    );
   }
   await db.producto.delete({
-    where: { id }
+    where: { id },
   });
   revalidatePath("/productos");
   return true;
@@ -205,7 +236,7 @@ export async function deleteProducto(id: string) {
 export async function getFacturas() {
   return await db.factura.findMany({
     include: { cliente: true },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 }
 
@@ -215,15 +246,15 @@ export async function getFacturaById(id: string) {
     include: {
       cliente: true,
       detalles: {
-        include: { producto: true }
-      }
-    }
+        include: { producto: true },
+      },
+    },
   });
 }
 
 export async function generateNextInvoiceNumber() {
   const lastFactura = await db.factura.findFirst({
-    orderBy: { numero: "desc" }
+    orderBy: { numero: "desc" },
   });
   if (!lastFactura) {
     return "FAC-00001";
@@ -260,7 +291,7 @@ export async function createFactura(data: {
 
   const subtotal = data.detalles.reduce(
     (acc, item) => acc + item.cantidad * item.precioUnitario,
-    0
+    0,
   );
   const descuentoValor = subtotal * (data.descuento / 100);
   const subtotalConDescuento = subtotal - descuentoValor;
@@ -302,11 +333,11 @@ export async function createFactura(data: {
             precioUnitario: d.precioUnitario,
             impuesto: d.impuesto || 0,
             subtotal: itemSub,
-            total: itemBase + itemTax
+            total: itemBase + itemTax,
           };
-        })
-      }
-    }
+        }),
+      },
+    },
   });
 
   revalidatePath("/facturas");
@@ -317,7 +348,7 @@ export async function createFactura(data: {
 export async function updateFacturaEstado(id: string, estado: string) {
   const factura = await db.factura.update({
     where: { id },
-    data: { estado }
+    data: { estado },
   });
   revalidatePath("/facturas");
   revalidatePath("/");
@@ -327,7 +358,7 @@ export async function updateFacturaEstado(id: string, estado: string) {
 export async function getFacturaStats() {
   const facturas = await db.factura.findMany({
     include: { cliente: true },
-    where: { NOT: { estado: "anulada" } }
+    where: { NOT: { estado: "anulada" } },
   });
 
   const totalVendido = facturas
@@ -352,13 +383,13 @@ export async function getFacturaStats() {
 
   const detalles = await db.detalleFactura.findMany({
     include: {
-      factura: true
+      factura: true,
     },
     where: {
       factura: {
-        NOT: { estado: "anulada" }
-      }
-    }
+        NOT: { estado: "anulada" },
+      },
+    },
   });
 
   const topProductosMap: Record<
@@ -395,8 +426,8 @@ export async function getFacturaStats() {
   const facturasPorEstado = await db.factura.groupBy({
     by: ["estado"],
     _count: {
-      id: true
-    }
+      id: true,
+    },
   });
 
   const avgVenta = facturas.length > 0 ? totalVendido / facturas.length : 0;
@@ -410,9 +441,9 @@ export async function getFacturaStats() {
     ventasPorMes,
     facturasPorEstado: facturasPorEstado.map((item) => ({
       estado: item.estado,
-      cantidad: item._count.id
+      cantidad: item._count.id,
     })),
-    avgVenta
+    avgVenta,
   };
 }
 
@@ -423,8 +454,8 @@ export async function seedDemoData() {
       data: {
         email: "admin@facturas.com",
         nombre: "Administrador Demo",
-        password: hashPassword("admin123")
-      }
+        password: hashPassword("admin123"),
+      },
     });
   }
 
@@ -442,8 +473,8 @@ export async function seedDemoData() {
       ciudad: "Bogotá",
       pais: "Colombia",
       observaciones: "Cliente corporativo principal",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const c2 = await db.cliente.create({
@@ -457,8 +488,8 @@ export async function seedDemoData() {
       ciudad: "Medellín",
       pais: "Colombia",
       observaciones: "Cliente recurrente de consultorías",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const c3 = await db.cliente.create({
@@ -471,8 +502,8 @@ export async function seedDemoData() {
       direccion: "Avenida 30 de Agosto # 45-12",
       ciudad: "Pereira",
       pais: "Colombia",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const p1 = await db.producto.create({
@@ -483,8 +514,8 @@ export async function seedDemoData() {
       precioUnitario: 120000,
       impuesto: 19,
       categoria: "Servicios",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const p2 = await db.producto.create({
@@ -495,8 +526,8 @@ export async function seedDemoData() {
       precioUnitario: 1500000,
       impuesto: 19,
       categoria: "Licencias",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const p3 = await db.producto.create({
@@ -507,8 +538,8 @@ export async function seedDemoData() {
       precioUnitario: 80000,
       impuesto: 0,
       categoria: "Soporte",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const p4 = await db.producto.create({
@@ -519,8 +550,8 @@ export async function seedDemoData() {
       precioUnitario: 180000,
       impuesto: 19,
       categoria: "Infraestructura",
-      estado: "activo"
-    }
+      estado: "activo",
+    },
   });
 
   const f1Date = new Date();
@@ -560,7 +591,7 @@ export async function seedDemoData() {
             precioUnitario: 1500000,
             impuesto: 19,
             subtotal: 3000000,
-            total: 3213000
+            total: 3213000,
           },
           {
             productoId: p1.id,
@@ -570,11 +601,11 @@ export async function seedDemoData() {
             precioUnitario: 90000,
             impuesto: 19,
             subtotal: 900000,
-            total: 963900
-          }
-        ]
-      }
-    }
+            total: 963900,
+          },
+        ],
+      },
+    },
   });
 
   await db.factura.create({
@@ -600,11 +631,11 @@ export async function seedDemoData() {
             precioUnitario: 120000,
             impuesto: 19,
             subtotal: 600000,
-            total: 714000
-          }
-        ]
-      }
-    }
+            total: 714000,
+          },
+        ],
+      },
+    },
   });
 
   await db.factura.create({
@@ -630,7 +661,7 @@ export async function seedDemoData() {
             precioUnitario: 180000,
             impuesto: 19,
             subtotal: 900000,
-            total: 1017450
+            total: 1017450,
           },
           {
             productoId: p3.id,
@@ -640,18 +671,18 @@ export async function seedDemoData() {
             precioUnitario: 100000,
             impuesto: 0,
             subtotal: 100000,
-            total: 95000
-          }
-        ]
-      }
-    }
+            total: 95000,
+          },
+        ],
+      },
+    },
   });
 }
 
 export async function loginAction(data: { email: string; password: string }) {
   try {
     const user = await db.usuario.findUnique({
-      where: { email: data.email }
+      where: { email: data.email },
     });
     if (!user) {
       return { success: false, error: "Credenciales incorrectas." };
@@ -664,7 +695,7 @@ export async function loginAction(data: { email: string; password: string }) {
     const session = await encrypt({
       userId: user.id,
       email: user.email,
-      nombre: user.nombre
+      nombre: user.nombre,
     });
 
     const cookieStore = await cookies();
@@ -673,12 +704,15 @@ export async function loginAction(data: { email: string; password: string }) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 2
+      maxAge: 60 * 60 * 2,
     });
 
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message || "Error al conectar con la base de datos." };
+    return {
+      success: false,
+      error: err.message || "Error al conectar con la base de datos.",
+    };
   }
 }
 
@@ -688,16 +722,27 @@ export async function logoutAction() {
 }
 
 export async function getSesionUsuario() {
-  return await getSession();
+  try {
+    return await getSession();
+  } catch {
+    return null;
+  }
 }
 
-export async function registerAction(data: { nombre: string; email: string; password: string }) {
+export async function registerAction(data: {
+  nombre: string;
+  email: string;
+  password: string;
+}) {
   try {
     const existingUser = await db.usuario.findUnique({
-      where: { email: data.email }
+      where: { email: data.email },
     });
     if (existingUser) {
-      return { success: false, error: "El correo electrónico ya está registrado." };
+      return {
+        success: false,
+        error: "El correo electrónico ya está registrado.",
+      };
     }
 
     const hashedPassword = hashPassword(data.password);
@@ -705,14 +750,14 @@ export async function registerAction(data: { nombre: string; email: string; pass
       data: {
         nombre: data.nombre,
         email: data.email,
-        password: hashedPassword
-      }
+        password: hashedPassword,
+      },
     });
 
     const session = await encrypt({
       userId: user.id,
       email: user.email,
-      nombre: user.nombre
+      nombre: user.nombre,
     });
 
     const cookieStore = await cookies();
@@ -721,11 +766,14 @@ export async function registerAction(data: { nombre: string; email: string; pass
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 2
+      maxAge: 60 * 60 * 2,
     });
 
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message || "Error al conectar con la base de datos." };
+    return {
+      success: false,
+      error: err.message || "Error al conectar con la base de datos.",
+    };
   }
 }

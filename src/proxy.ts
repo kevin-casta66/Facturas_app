@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.SUPABASE_SECRET_KEY || "default-secret-key-32-chars-long-or-more"
+  process.env.SUPABASE_SECRET_KEY || "default-secret-key-32-chars-long-or-more",
 );
 
 export async function proxy(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
   if (sessionCookie) {
     try {
       const { payload } = await jwtVerify(sessionCookie, JWT_SECRET, {
-        algorithms: ["HS256"]
+        algorithms: ["HS256"],
       });
       session = payload;
     } catch {}
@@ -46,6 +46,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
-  ]
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
