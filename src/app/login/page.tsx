@@ -50,15 +50,20 @@ export default function LoginPage() {
     }
 
     try {
-      if (mode === "login") {
-        await loginAction({ email, password });
-      } else {
-        await registerAction({ nombre, email, password });
+      const res = mode === "login"
+        ? await loginAction({ email, password })
+        : await registerAction({ nombre, email, password });
+
+      if (res && !res.success) {
+        setError(res.error || "Ocurrió un error.");
+        setLoading(false);
+        return;
       }
+
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error.");
+    } catch {
+      setError("Ocurrió un error inesperado.");
       setLoading(false);
     }
   };

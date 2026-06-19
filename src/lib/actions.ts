@@ -649,33 +649,37 @@ export async function seedDemoData() {
 }
 
 export async function loginAction(data: { email: string; password: string }) {
-  const user = await db.usuario.findUnique({
-    where: { email: data.email }
-  });
-  if (!user) {
-    throw new Error("Credenciales incorrectas.");
+  try {
+    const user = await db.usuario.findUnique({
+      where: { email: data.email }
+    });
+    if (!user) {
+      return { success: false, error: "Credenciales incorrectas." };
+    }
+    const isPassValid = verifyPassword(data.password, user.password);
+    if (!isPassValid) {
+      return { success: false, error: "Credenciales incorrectas." };
+    }
+
+    const session = await encrypt({
+      userId: user.id,
+      email: user.email,
+      nombre: user.nombre
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", session, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 2
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Error al conectar con la base de datos." };
   }
-  const isPassValid = verifyPassword(data.password, user.password);
-  if (!isPassValid) {
-    throw new Error("Credenciales incorrectas.");
-  }
-
-  const session = await encrypt({
-    userId: user.id,
-    email: user.email,
-    nombre: user.nombre
-  });
-
-  const cookieStore = await cookies();
-  cookieStore.set("session", session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2
-  });
-
-  return true;
 }
 
 export async function logoutAction() {
@@ -688,36 +692,40 @@ export async function getSesionUsuario() {
 }
 
 export async function registerAction(data: { nombre: string; email: string; password: string }) {
-  const existingUser = await db.usuario.findUnique({
-    where: { email: data.email }
-  });
-  if (existingUser) {
-    throw new Error("El correo electrónico ya está registrado.");
-  }
-
-  const hashedPassword = hashPassword(data.password);
-  const user = await db.usuario.create({
-    data: {
-      nombre: data.nombre,
-      email: data.email,
-      password: hashedPassword
+  try {
+    const existingUser = await db.usuario.findUnique({
+      where: { email: data.email }
+    });
+    if (existingUser) {
+      return { success: false, error: "El correo electrónico ya está registrado." };
     }
-  });
 
-  const session = await encrypt({
-    userId: user.id,
-    email: user.email,
-    nombre: user.nombre
-  });
+    const hashedPassword = hashPassword(data.password);
+    const user = await db.usuario.create({
+      data: {
+        nombre: data.nombre,
+        email: data.email,
+        password: hashedPassword
+      }
+    });
 
-  const cookieStore = await cookies();
-  cookieStore.set("session", session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2
-  });
+    const session = await encrypt({
+      userId: user.id,
+      email: user.email,
+      nombre: user.nombre
+    });
 
-  return true;
+    const cookieStore = await cookies();
+    cookieStore.set("session", session, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 2
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Error al conectar con la base de datos." };
+  }
 }
