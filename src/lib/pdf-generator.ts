@@ -68,7 +68,9 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
   if (empresa.logo) {
     try {
       doc.addImage(empresa.logo, "PNG", 15, currentY, 25, 25);
-    } catch {}
+    } catch (logoErr) {
+      console.warn("[PDF] No se pudo cargar el logo de la empresa:", logoErr);
+    }
   }
 
   doc.setFont("Helvetica", "bold");

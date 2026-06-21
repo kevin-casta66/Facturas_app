@@ -78,6 +78,7 @@ export default function FacturasContent({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(null);
 
   const refreshList = async () => {
     const data = await getFacturas();
@@ -85,16 +86,28 @@ export default function FacturasContent({
   };
 
   const handleDownloadPDF = async (factura: Factura) => {
+    if (downloadLoadingId === factura.id) return; // evitar doble click
+    setDownloadLoadingId(factura.id);
     try {
       let fullFactura = factura;
-      if (!factura.detalles) {
+      // Si aún no tenemos los detalles, los solicitamos
+      if (!factura.detalles || factura.detalles.length === 0) {
         const res = await fetch(`/api/facturas/${factura.id}`);
-        if (res.ok) {
-          fullFactura = await res.json();
+        if (!res.ok) {
+          throw new Error(`Error al obtener la factura: ${res.status} ${res.statusText}`);
         }
+        fullFactura = await res.json();
+      }
+      if (!fullFactura.detalles || fullFactura.detalles.length === 0) {
+        throw new Error("La factura no tiene detalles para generar el PDF.");
       }
       generateInvoicePDF(fullFactura as any, empresa);
-    } catch {}
+    } catch (err) {
+      console.error("[PDF] Error al generar la factura:", err);
+      alert(`No se pudo generar el PDF: ${err instanceof Error ? err.message : "Error desconocido"}`);
+    } finally {
+      setDownloadLoadingId(null);
+    }
   };
 
   const handleOpenDetail = async (factura: Factura) => {
@@ -339,10 +352,13 @@ export default function FacturasContent({
                         </button>
                         <button
                           onClick={() => handleDownloadPDF(factura)}
-                          className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                          disabled={downloadLoadingId === factura.id}
+                          className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Descargar PDF"
                         >
-                          <Download className="h-4 w-4" />
+                          {downloadLoadingId === factura.id
+                            ? <RefreshCw className="h-4 w-4 animate-spin text-indigo-400" />
+                            : <Download className="h-4 w-4" />}
                         </button>
                         {factura.estado === "emitida" && (
                           <>
@@ -577,10 +593,20 @@ export default function FacturasContent({
               <div className="flex gap-2">
                 <button
                   onClick={() => handleDownloadPDF(selectedFactura)}
-                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
+                  disabled={downloadLoadingId === selectedFactura.id}
+                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Descargar PDF
+                  {downloadLoadingId === selectedFactura.id ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      Generando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-3.5 w-3.5" />
+                      Descargar PDF
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setIsDetailModalOpen(false)}
