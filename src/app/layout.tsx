@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import SidebarServer from "@/components/SidebarServer";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sistema de Facturación",
   description: "Gestión y generación de facturas electrónicas en PDF",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Facturas",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+// En Next.js 16 App Router, viewport se exporta por separado (no dentro de metadata)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({
@@ -27,6 +46,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
       <body className="h-full bg-slate-950 text-slate-100 flex flex-col lg:flex-row overflow-hidden">
+        <ServiceWorkerRegistrar />
         <Suspense fallback={null}>
           <SidebarServer />
         </Suspense>
@@ -39,4 +59,3 @@ export default function RootLayout({
     </html>
   );
 }
-

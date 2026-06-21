@@ -242,5 +242,32 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     doc.text(`Página ${i} de ${pageCount}`, 195, 284, { align: "right" });
   }
 
-  doc.save(`Factura-${factura.numero}.pdf`);
+  // En dispositivos móviles (iOS Safari y Android), doc.save() no funciona porque
+  // los navegadores bloquean descargas directas desde blobs generados por JS.
+  // La solución universal es abrir el PDF como blob URL en una nueva pestaña.
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+  if (isMobile) {
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    const newTab = window.open(url, "_blank");
+    // Si el navegador bloquea la nueva pestaña, crear un link temporal
+    if (!newTab) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    // Liberar la URL del blob después de 30s
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } else {
+    doc.save(`Factura-${factura.numero}.pdf`);
+  }
 }
