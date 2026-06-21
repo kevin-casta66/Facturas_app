@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { formatCurrency, formatDate } from "./utils";
 
 interface Empresa {
@@ -132,20 +132,20 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     formatCurrency(d.subtotal)
   ]);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: currentY,
     head: [["#", "Código", "Descripción", "Cant", "Precio Unitario", "Imp.", "Subtotal"]],
     body: tableRows,
     theme: "striped",
     headStyles: {
-      fillColor: primaryColor,
-      textColor: [255, 255, 255],
+      fillColor: primaryColor as [number, number, number],
+      textColor: [255, 255, 255] as [number, number, number],
       fontSize: 9,
       fontStyle: "bold"
     },
     bodyStyles: {
       fontSize: 8.5,
-      textColor: textColor
+      textColor: textColor as [number, number, number]
     },
     columnStyles: {
       0: { cellWidth: 8 },
@@ -159,6 +159,7 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     margin: { left: 15, right: 15 }
   });
 
+  // En v5, lastAutoTable se adjunta al objeto doc después de llamar autoTable()
   const finalY = (doc as any).lastAutoTable.finalY + 8;
   currentY = finalY;
 
