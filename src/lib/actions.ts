@@ -181,11 +181,19 @@ export async function updateCliente(
 }
 
 export async function deleteCliente(id: string) {
-  // Las facturas asociadas quedan con clienteId = null (onDelete: SetNull en schema)
-  await db.cliente.delete({
-    where: { id },
-  });
+  // SQLite no ejecuta onDelete:SetNull automáticamente.
+  // Usamos una transacción para: 1) desasociar facturas, 2) eliminar el cliente.
+  await db.$transaction([
+    db.factura.updateMany({
+      where: { clienteId: id },
+      data: { clienteId: null },
+    }),
+    db.cliente.delete({
+      where: { id },
+    }),
+  ]);
   revalidatePath("/clientes");
+  revalidatePath("/facturas");
   return true;
 }
 
