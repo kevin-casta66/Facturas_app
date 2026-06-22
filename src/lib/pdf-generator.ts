@@ -245,6 +245,20 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     doc.text(`Página ${i} de ${pageCount}`, 195, 284, { align: "right" });
   }
 
+  // Nombre del archivo: Factura_{nombre-cliente}_{fecha-emision}
+  const sanitize = (str: string) =>
+    str.replace(/[^a-zA-Z0-9À-ÿ\s-]/g, "").trim().replace(/\s+/g, "-");
+
+  const fechaStr = (() => {
+    const d = new Date(factura.fechaEmision);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
+  const nombreArchivo = `Factura_${sanitize(factura.cliente.nombre)}_${fechaStr}.pdf`;
+
   // En dispositivos móviles (iOS Safari y Android), doc.save() no funciona porque
   // los navegadores bloquean descargas directas desde blobs generados por JS.
   // La solución universal es abrir el PDF como blob URL en una nueva pestaña.
@@ -262,6 +276,7 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     if (!newTab) {
       const a = document.createElement("a");
       a.href = url;
+      a.download = nombreArchivo;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       document.body.appendChild(a);
@@ -271,6 +286,6 @@ export function generateInvoicePDF(factura: Factura, empresa: Empresa) {
     // Liberar la URL del blob después de 30s
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   } else {
-    doc.save(`Factura-${factura.numero}.pdf`);
+    doc.save(nombreArchivo);
   }
 }

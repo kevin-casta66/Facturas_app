@@ -58,7 +58,7 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
     ciudad: "",
     pais: "",
     observaciones: "",
-    estado: "activo"
+    estado: "activo",
   });
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -349,9 +349,27 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
 
             <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nombre — único campo obligatorio */}
+                <div className="flex flex-col gap-1.5 md:col-span-2">
+                  <label className="text-sm font-semibold text-slate-300">
+                    Nombre o Razón Social <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Ej: Tecnologías Modernas Ltda"
+                    className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
+                  />
+                </div>
+
+                {/* Identificación — opcional */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     Tipo de Identificación
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <select
                     name="tipoIdentificacion"
@@ -359,6 +377,7 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                     onChange={handleInputChange}
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white cursor-pointer"
                   >
+                    <option value="">Sin especificar</option>
                     <option value="NIT">NIT</option>
                     <option value="CC">Cédula de Ciudadanía (CC)</option>
                     <option value="CE">Cédula de Extranjería (CE)</option>
@@ -370,27 +389,14 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     Documento / NIT
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     name="documento"
                     value={formData.documento}
                     onChange={handleInputChange}
-                    required
-                    className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="text-sm font-semibold text-slate-300">
-                    Nombre o Razón Social
-                  </label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    value={formData.nombre}
-                    onChange={handleInputChange}
-                    required
+                    placeholder="Ej: 900.123.456-7"
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
@@ -398,13 +404,14 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     Correo Electrónico
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="email"
                     name="correo"
                     value={formData.correo}
                     onChange={handleInputChange}
-                    required
+                    placeholder="correo@ejemplo.com"
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
@@ -412,13 +419,14 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     Teléfono
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     name="telefono"
                     value={formData.telefono}
                     onChange={handleInputChange}
-                    required
+                    placeholder="+57 300 000 0000"
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
@@ -426,13 +434,14 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-300">
                     Dirección
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     name="direccion"
                     value={formData.direccion}
                     onChange={handleInputChange}
-                    required
+                    placeholder="Calle, Carrera, número..."
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
@@ -440,13 +449,14 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     Ciudad
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     name="ciudad"
                     value={formData.ciudad}
                     onChange={handleInputChange}
-                    required
+                    placeholder="Bogotá, Medellín..."
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
@@ -454,44 +464,50 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-300">
                     País
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     name="pais"
                     value={formData.pais}
                     onChange={handleInputChange}
-                    required
+                    placeholder="Colombia"
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-300">
-                    Observaciones (Opcional)
+                    Observaciones
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(opcional)</span>
                   </label>
                   <textarea
                     name="observaciones"
                     value={formData.observaciones}
                     onChange={handleInputChange}
                     rows={2}
+                    placeholder="Notas adicionales sobre el cliente..."
                     className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white resize-none"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-slate-300">
-                    Estado
-                  </label>
-                  <select
-                    name="estado"
-                    value={formData.estado}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white cursor-pointer"
-                  >
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                  </select>
-                </div>
+                {/* Estado — solo visible al editar */}
+                {editingCliente && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-slate-300">
+                      Estado
+                    </label>
+                    <select
+                      name="estado"
+                      value={formData.estado}
+                      onChange={handleInputChange}
+                      className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:outline-none focus:border-indigo-500 text-sm text-white cursor-pointer"
+                    >
+                      <option value="activo">Activo</option>
+                      <option value="inactivo">Inactivo</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
@@ -522,8 +538,9 @@ export default function ClientesContent({ initialClientes }: ClientesContentProp
               ¿Eliminar cliente?
             </h3>
             <p className="text-sm text-slate-400">
-              Esta acción no se puede deshacer. Se validará que el cliente no
-              tenga facturas asociadas antes de su eliminación.
+              Esta acción no se puede deshacer. Las facturas asociadas a este
+              cliente <span className="text-amber-400 font-medium">no se eliminarán</span>,
+              quedarán sin cliente asociado.
             </p>
             <div className="flex justify-end gap-3 pt-2">
               <button

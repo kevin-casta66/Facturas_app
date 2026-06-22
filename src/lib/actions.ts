@@ -86,25 +86,45 @@ export async function getClienteById(id: string) {
 }
 
 export async function createCliente(data: {
-  tipoIdentificacion: string;
-  documento: string;
   nombre: string;
-  correo: string;
-  telefono: string;
-  direccion: string;
-  ciudad: string;
-  pais: string;
+  tipoIdentificacion?: string;
+  documento?: string;
+  correo?: string;
+  telefono?: string;
+  direccion?: string;
+  ciudad?: string;
+  pais?: string;
   observaciones?: string;
-  estado?: string;
 }) {
-  const exCliente = await db.cliente.findUnique({
-    where: { documento: data.documento },
+  // Validar nombre único
+  const exNombre = await db.cliente.findFirst({
+    where: { nombre: data.nombre },
   });
-  if (exCliente) {
-    throw new Error("El documento ya se encuentra registrado.");
+  if (exNombre) {
+    throw new Error("Ya existe un cliente con ese nombre.");
+  }
+  // Validar documento único solo si se proporcionó
+  if (data.documento) {
+    const exDoc = await db.cliente.findFirst({
+      where: { documento: data.documento },
+    });
+    if (exDoc) {
+      throw new Error("El documento ya se encuentra registrado.");
+    }
   }
   const cliente = await db.cliente.create({
-    data,
+    data: {
+      nombre: data.nombre,
+      tipoIdentificacion: data.tipoIdentificacion || "",
+      documento: data.documento || "",
+      correo: data.correo || "",
+      telefono: data.telefono || "",
+      direccion: data.direccion || "",
+      ciudad: data.ciudad || "",
+      pais: data.pais || "",
+      observaciones: data.observaciones,
+      estado: "activo", // siempre activo al crear
+    },
   });
   revalidatePath("/clientes");
   return cliente;
@@ -113,43 +133,55 @@ export async function createCliente(data: {
 export async function updateCliente(
   id: string,
   data: {
-    tipoIdentificacion: string;
-    documento: string;
     nombre: string;
-    correo: string;
-    telefono: string;
-    direccion: string;
-    ciudad: string;
-    pais: string;
+    tipoIdentificacion?: string;
+    documento?: string;
+    correo?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    pais?: string;
     observaciones?: string;
     estado?: string;
   },
 ) {
-  const exCliente = await db.cliente.findFirst({
-    where: { documento: data.documento, NOT: { id } },
+  // Validar nombre único excluyendo el mismo cliente
+  const exNombre = await db.cliente.findFirst({
+    where: { nombre: data.nombre, NOT: { id } },
   });
-  if (exCliente) {
-    throw new Error(
-      "El documento ya se encuentra registrado por otro cliente.",
-    );
+  if (exNombre) {
+    throw new Error("Ya existe otro cliente con ese nombre.");
+  }
+  // Validar documento único si se proporcionó
+  if (data.documento) {
+    const exDoc = await db.cliente.findFirst({
+      where: { documento: data.documento, NOT: { id } },
+    });
+    if (exDoc) {
+      throw new Error("El documento ya se encuentra registrado por otro cliente.");
+    }
   }
   const cliente = await db.cliente.update({
     where: { id },
-    data,
+    data: {
+      nombre: data.nombre,
+      tipoIdentificacion: data.tipoIdentificacion ?? undefined,
+      documento: data.documento ?? undefined,
+      correo: data.correo ?? undefined,
+      telefono: data.telefono ?? undefined,
+      direccion: data.direccion ?? undefined,
+      ciudad: data.ciudad ?? undefined,
+      pais: data.pais ?? undefined,
+      observaciones: data.observaciones,
+      estado: data.estado ?? undefined,
+    },
   });
   revalidatePath("/clientes");
   return cliente;
 }
 
 export async function deleteCliente(id: string) {
-  const facturasCount = await db.factura.count({
-    where: { clienteId: id },
-  });
-  if (facturasCount > 0) {
-    throw new Error(
-      "No se puede eliminar el cliente porque tiene facturas asociadas.",
-    );
-  }
+  // Las facturas asociadas quedan con clienteId = null (onDelete: SetNull en schema)
   await db.cliente.delete({
     where: { id },
   });
@@ -370,7 +402,7 @@ export async function getFacturaStats() {
 
   const topClientesMap: Record<string, { nombre: string; total: number }> = {};
   facturas.forEach((f) => {
-    if (f.estado !== "anulada") {
+    if (f.estado !== "anulada" && f.clienteId && f.cliente) {
       if (!topClientesMap[f.clienteId]) {
         topClientesMap[f.clienteId] = { nombre: f.cliente.nombre, total: 0 };
       }
